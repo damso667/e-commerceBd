@@ -3,13 +3,15 @@ package com.example.E_commerce.Repository;
 import com.example.E_commerce.Models.Article;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface ArticleRepository extends JpaRepository<Article, Long> {
+public interface ArticleRepository
+        extends JpaRepository<Article, Long>, JpaSpecificationExecutor<Article> {
 
     Optional<Article> findByLibelle(String libelle);
 

@@ -4,11 +4,13 @@ import com.example.E_commerce.Models.Article;
 import com.example.E_commerce.Models.Avis;
 import com.example.E_commerce.Models.Personne;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface AvisRepository extends JpaRepository<Avis, Long> {
+public interface AvisRepository
+        extends JpaRepository<Avis, Long>, JpaSpecificationExecutor<Avis> {
 
     List<Avis> findByArticle(Article article);
 

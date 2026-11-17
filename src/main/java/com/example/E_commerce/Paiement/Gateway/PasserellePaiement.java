@@ -35,4 +35,25 @@ public interface PasserellePaiement {
      * Evite d'envoyer un numero Orange a MTN.
      */
     boolean accepteNumero(String numero);
+
+    /**
+     * Demande le remboursement d'un paiement reussi.
+     *
+     * <p>Par defaut : <b>non disponible</b>. Chez MTN comme chez Orange, un
+     * remboursement passe par un produit distinct de l'encaissement
+     * (Disbursement chez MTN, transfert marchand chez Orange) qui demande
+     * une habilitation separee. Beaucoup de marchands camerounais le font
+     * donc a la main.</p>
+     *
+     * <p>Le marchand ne doit pas etre bloque pour autant : le service
+     * enregistre le remboursement dans tous les cas, et cette valeur de
+     * retour sert uniquement a dire a l'administrateur s'il doit encore
+     * effectuer le transfert lui-meme.</p>
+     *
+     * @return true si l'operateur a execute le remboursement automatiquement
+     */
+    default boolean rembourser(String referenceInterne, String referenceOperateur,
+                               java.math.BigDecimal montant) {
+        return false;
+    }
 }

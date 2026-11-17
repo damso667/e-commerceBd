@@ -125,6 +125,14 @@ public abstract class PasserelleSimuleeBase implements PasserellePaiement {
                 "Demande envoyee. Validez la transaction sur votre telephone.");
     }
 
+    /** En simulation, le remboursement reussit toujours et sans delai. */
+    @Override
+    public boolean rembourser(String referenceInterne, String referenceOperateur, BigDecimal montant) {
+        log.info("[SIMULATION {}] remboursement de {} pour {} (operateur {})",
+                fournisseur(), montant, referenceInterne, referenceOperateur);
+        return true;
+    }
+
     @Override
     public ResultatPasserelle consulter(String referenceInterne, String referenceOperateur) {
         IssueSimulee transaction = transactions.get(referenceOperateur);

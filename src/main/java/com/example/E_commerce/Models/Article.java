@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@org.hibernate.annotations.BatchSize(size = 50)
 public class Article {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

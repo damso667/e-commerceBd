@@ -3,12 +3,15 @@ package com.example.E_commerce.Repository;
 import com.example.E_commerce.Models.Commande;
 import com.example.E_commerce.Models.Personne;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface CommandeRepository extends JpaRepository<Commande, Long> {
+public interface CommandeRepository
+        extends JpaRepository<Commande, Long>, JpaSpecificationExecutor<Commande> {
 
     List<Commande> findByClient(Personne client);
 
@@ -42,6 +45,22 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
            left join fetch c.client
            """)
     List<Commande> chargerToutesCompletes();
+
+    /** Statistiques d'un client : [nbCommandes, nbPayees, totalDepense, derniereCommande]. */
+    @Query("""
+           select count(c),
+                  sum(case when c.statut in (com.example.E_commerce.Enum.StatutCommande.PAYEE,
+                                             com.example.E_commerce.Enum.StatutCommande.EN_COURS,
+                                             com.example.E_commerce.Enum.StatutCommande.LIVREE)
+                           then 1 else 0 end),
+                  coalesce(sum(case when c.statut in (com.example.E_commerce.Enum.StatutCommande.PAYEE,
+                                                      com.example.E_commerce.Enum.StatutCommande.EN_COURS,
+                                                      com.example.E_commerce.Enum.StatutCommande.LIVREE)
+                                    then c.montantTotal else 0 end), 0),
+                  max(c.dateCreation)
+           from Commande c where c.client.id = :idClient
+           """)
+    List<Object[]> statistiquesClient(@Param("idClient") Long idClient);
 
     /**
      * Commandes restees EN_ATTENTE sans aucune tentative de paiement active,

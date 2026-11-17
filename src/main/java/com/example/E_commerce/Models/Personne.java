@@ -11,6 +11,7 @@ import java.util.List;
 
 @Entity
 @Data
+@org.hibernate.annotations.BatchSize(size = 50)
 public class Personne {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,6 +25,20 @@ public class Personne {
 
     @Column(nullable = false)
     private boolean actif = true;
+
+    /**
+     * Date d'inscription. Absente du modele initial, elle est indispensable
+     * pour compter les nouveaux clients d'une periode. Les comptes crees
+     * avant cet ajout l'auront a null : les requetes les excluent.
+     */
+    private java.time.Instant dateInscription;
+
+    @PrePersist
+    void avantInsertion() {
+        if (dateInscription == null) {
+            dateInscription = java.time.Instant.now();
+        }
+    }
 
     @Enumerated(EnumType.STRING)
     private Role role;

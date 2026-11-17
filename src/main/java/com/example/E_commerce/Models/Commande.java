@@ -46,7 +46,13 @@ public class Commande {
         }
     }
 
+    /**
+     * {@code @BatchSize} : quand on affiche une page de 20 commandes,
+     * Hibernate charge les 20 collections de lignes en une seule requete
+     * au lieu de 20. C'est ce qui rend la vue de liste tenable.
+     */
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
+    @org.hibernate.annotations.BatchSize(size = 50)
     private List<LigneCommande> lignes = new ArrayList<>();
 
     /**

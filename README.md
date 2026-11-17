@@ -3,7 +3,8 @@
 API REST Spring Boot 4 / Java 21 / PostgreSQL (Supabase), avec paiement
 mobile money simulé (MTN MoMo et Orange Money).
 
-- Documentation du module de paiement : [docs/PAIEMENT.md](docs/PAIEMENT.md)
+- Module de paiement : [docs/PAIEMENT.md](docs/PAIEMENT.md)
+- Back-office administrateur : [docs/BACKOFFICE.md](docs/BACKOFFICE.md)
 
 ---
 
@@ -47,9 +48,18 @@ Serveur démarré, dans un autre terminal :
 python scripts/test_paiement.py
 ```
 
-Le script enchaîne 31 vérifications : idempotence, notification asynchrone,
-rejeu de callback, falsification de montant, restitution du stock,
-cloisonnement des rôles.
+```bash
+python scripts/test_admin.py
+```
+
+Le premier script enchaîne 31 vérifications du parcours client : idempotence,
+notification asynchrone, rejeu de callback, falsification de montant,
+restitution du stock, cloisonnement des rôles.
+
+Le second en enchaîne 77 sur le back-office : tableau de bord et bornes de
+période, pagination et plafonnement de `size`, filtres et recherche,
+remboursement et ses cas refusés, ajustement de stock, garde-fous sur les
+rôles, journal d'audit.
 
 ---
 
@@ -114,8 +124,8 @@ src/main/java/com/example/E_commerce/
 │   │   ├── Simulation/   MTN et Orange simulés
 │   │   └── Reel/         squelettes des vraies API
 │   └── Service/      service métier, signature, tâches de fond
-├── Repository/
-└── Services/         admin, client, catalogue
+├── Repository/       dépôts JPA + Recherches (API Criteria)
+└── Services/         admin, tableau de bord, journal d'audit, client, catalogue
 ```
 
 ---
@@ -154,8 +164,30 @@ src/main/java/com/example/E_commerce/
 
 ### Admin (`ROLE_ADMIN`)
 
-`/api/admin/articles`, `/api/admin/categories`, `/api/admin/commandes`,
-`/api/admin/clients`, `/api/admin/avis`, `/api/admin/statistiques`.
+Détail complet dans [docs/BACKOFFICE.md](docs/BACKOFFICE.md).
+
+| Méthode | Route | Rôle |
+|---------|-------|------|
+| GET | `/api/admin/tableau-de-bord?debut=&fin=` | tableau de bord sur période |
+| GET | `/api/admin/statistiques` | ancien tableau de bord (conservé) |
+| GET | `/api/admin/paiements` | suivi des paiements, filtrable |
+| GET | `/api/admin/paiements/{reference}` | fiche complète + callbacks reçus |
+| POST | `/api/admin/paiements/{reference}/remboursement` | remboursement |
+| GET | `/api/admin/commandes/{id}/paiements` | tentatives d'une commande |
+| GET | `/api/admin/commandes` | commandes, filtrables et paginées |
+| PATCH | `/api/admin/commandes/{id}/statut` | changement de statut contrôlé |
+| GET | `/api/admin/articles` | catalogue, filtrable |
+| PATCH | `/api/admin/articles/{id}/stock` | ajustement de stock par variation |
+| GET | `/api/admin/clients` | comptes, filtrables |
+| GET | `/api/admin/clients/{id}` | fiche client enrichie |
+| PATCH | `/api/admin/clients/{id}/activation` | blocage / déblocage |
+| PATCH | `/api/admin/clients/{id}/role` | promotion / rétrogradation |
+| GET | `/api/admin/avis` | modération, filtrable |
+| GET | `/api/admin/journal` | journal d'audit |
+
+Toutes les listes acceptent `?page=0&size=20&sort=champ,desc` et renvoient
+une enveloppe `PageReponse` (`contenu`, `totalElements`, `totalPages`…).
+`size` est plafonné à 200.
 
 ---
 
@@ -193,6 +225,9 @@ Les erreurs de validation ajoutent le détail par champ :
 ## Tests
 
 ```bash
-./mvnw test                          # tests unitaires
-python scripts/test_paiement.py      # bout en bout, serveur démarré
+./mvnw test                          # 7 tests unitaires
+python scripts/test_paiement.py      # 31 contrôles, parcours client
+python scripts/test_admin.py         # 77 contrôles, back-office
 ```
+
+Les deux scripts Python exigent que le serveur tourne.
