@@ -1,6 +1,14 @@
 # =============================================================
 #  Blueprint Render - API E-commerce
 #
+#  Service deploye : ecommerce-api (srv-dbu5j1cipgvc73aplql0)
+#  URL            : https://ecommerce-api-60sl.onrender.com
+#  Region         : frankfurt (proche du pooler Supabase eu-central-1)
+#
+#  Ce fichier decrit l'infrastructure a l'identique et sert a la
+#  recreer ailleurs. Le service existant, lui, a ete cree directement
+#  et n'est pas pilote par ce blueprint.
+#
 #  Pas de base de donnees declaree ici : la persistance est sur
 #  Supabase, atteinte via les variables DB_* (sync: false).
 #
@@ -80,7 +88,7 @@ services:
       - key: MTN_MOMO_TARGET_ENVIRONMENT
         value: sandbox
       - key: MTN_MOMO_CALLBACK_URL
-        value: https://ecommerce-api.onrender.com/api/paiements/webhook/MTN_MOMO
+        value: https://ecommerce-api-60sl.onrender.com/api/paiements/webhook/MTN_MOMO
 
       - key: ORANGE_MONEY_BASE_URL
         value: https://api.orange.com
@@ -91,4 +99,4 @@ services:
       - key: ORANGE_MONEY_MERCHANT_KEY
         sync: false
       - key: ORANGE_MONEY_CALLBACK_URL
-        value: https://ecommerce-api.onrender.com/api/paiements/webhook/ORANGE_MONEY
+        value: https://ecommerce-api-60sl.onrender.com/api/paiements/webhook/ORANGE_MONEY
