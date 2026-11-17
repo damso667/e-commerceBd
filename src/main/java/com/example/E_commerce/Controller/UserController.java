@@ -1,126 +1,78 @@
 package com.example.E_commerce.Controller;
 
-import com.example.E_commerce.Dto.*;
-import com.example.E_commerce.Enum.Role;
-import com.example.E_commerce.Models.*;
-import com.example.E_commerce.Repository.PersonneRepository;
+import com.example.E_commerce.Config.UtilisateurCourant;
+import com.example.E_commerce.Dto.AvisDto;
+import com.example.E_commerce.Dto.AvisResponseDto;
+import com.example.E_commerce.Dto.CommandeResponseDto;
+import com.example.E_commerce.Dto.PagnierDto;
+import com.example.E_commerce.Dto.PanierResponseDto;
 import com.example.E_commerce.Services.UserService;
-import lombok.AllArgsConstructor;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Espace client : panier, commandes, avis.
+ *
+ * <p>Le paiement est gere a part, dans {@code PaiementController}.</p>
+ */
 @RestController
-@RequestMapping(value = "/api/user")
-@AllArgsConstructor
+@RequestMapping("/api/user")
+@RequiredArgsConstructor
 public class UserController {
 
-    private  final PersonneRepository personneRepository;
-    private  final UserService userService;
-    private  final PasswordEncoder passwordEncoder;
+    private final UserService userService;
+    private final UtilisateurCourant utilisateurCourant;
 
+    // ---------------- Panier ----------------
 
     @PostMapping("/ajoutPanier")
-    public ResponseEntity<PanierResponseDto> ajoutPanier(@RequestBody PagnierDto ajoutPanierDto) {
-
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        Personne client = personneRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Client introuvable"));
-
-        PanierResponseDto pagnier = userService.ajoutPagnier(
-                client.getId(),
-                ajoutPanierDto.getIdArticle()
-        );
-        return ResponseEntity.ok(pagnier);
-    }
-
-    @PostMapping("/passerCommande")
-    public ResponseEntity<CommandeResponseDto> passerCommande(@RequestBody CommandeDto dto) {
-
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-
-        Personne client = personneRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Client introuvable"));
-
-        CommandeResponseDto commande = userService.passerCommande(
-                client.getId(),
-                dto.getModePaiement(),
-                dto.getMontant()
-        );
-        return ResponseEntity.ok(commande);
+    public ResponseEntity<PanierResponseDto> ajoutPanier(@Valid @RequestBody PagnierDto dto) {
+        return ResponseEntity.ok(userService.ajoutPagnier(
+                utilisateurCourant.id(), dto.getIdArticle(), dto.getQuantite()));
     }
 
     @GetMapping("/monPanier")
     public ResponseEntity<PanierResponseDto> voirMonPanier() {
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        Personne client = personneRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Client introuvable"));
-        return ResponseEntity.ok(userService.voirMonPanier(client.getId()));
-    }
-
-    @GetMapping("/mesCommandes")
-    public ResponseEntity<List<CommandeResponseDto>> voirMesCommandes() {
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        Personne client = personneRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Client introuvable"));
-        return ResponseEntity.ok(userService.voirMesCommandes(client.getId()));
-    }
-
-    @PostMapping("/laisserAvis")
-    public ResponseEntity<Avis> laisserAvis(@RequestBody AvisDto avisDto) {
-
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-
-        Personne client = personneRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Client introuvable"));
-
-        Avis avis = userService.laisserAvis(
-                client.getId(),
-                avisDto.getIdArticle(),
-                avisDto.getNote(),
-                avisDto.getCommentaire()
-        );
-        return ResponseEntity.ok(avis);
+        return ResponseEntity.ok(userService.voirMonPanier(utilisateurCourant.id()));
     }
 
     @DeleteMapping("/viderPanier")
     public ResponseEntity<Void> viderPanier() {
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        Personne client = personneRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Client introuvable"));
-        userService.viderPanier(client.getId());
-        return ResponseEntity.ok().build();
+        userService.viderPanier(utilisateurCourant.id());
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/supprimerArticlePanier/{idArticle}")
     public ResponseEntity<PanierResponseDto> supprimerArticlePanier(@PathVariable Long idArticle) {
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        Personne client = personneRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Client introuvable"));
-        return ResponseEntity.ok(userService.supprimerArticlePanier(client.getId(), idArticle));
+        return ResponseEntity.ok(
+                userService.supprimerArticlePanier(utilisateurCourant.id(), idArticle));
     }
 
     @PatchMapping("/diminuerQuantite/{idArticle}")
     public ResponseEntity<PanierResponseDto> diminuerQuantite(@PathVariable Long idArticle) {
-        String email = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        Personne client = personneRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Client introuvable"));
-        return ResponseEntity.ok(userService.diminuerQuantite(client.getId(), idArticle));
+        return ResponseEntity.ok(
+                userService.diminuerQuantite(utilisateurCourant.id(), idArticle));
     }
 
+    // ---------------- Commandes ----------------
 
+    @GetMapping("/mesCommandes")
+    public ResponseEntity<List<CommandeResponseDto>> voirMesCommandes() {
+        return ResponseEntity.ok(userService.voirMesCommandes(utilisateurCourant.id()));
+    }
+
+    // ---------------- Avis ----------------
+
+    @PostMapping("/laisserAvis")
+    public ResponseEntity<AvisResponseDto> laisserAvis(@Valid @RequestBody AvisDto avisDto) {
+        return ResponseEntity.ok(userService.laisserAvis(
+                utilisateurCourant.id(),
+                avisDto.getIdArticle(),
+                avisDto.getNote(),
+                avisDto.getCommentaire()));
+    }
 }

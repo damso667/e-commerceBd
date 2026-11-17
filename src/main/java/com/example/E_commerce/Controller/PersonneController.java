@@ -3,35 +3,32 @@ package com.example.E_commerce.Controller;
 import com.example.E_commerce.Dto.ArticleDto;
 import com.example.E_commerce.Dto.AvisResponseDto;
 import com.example.E_commerce.Dto.PersonneDto;
-import com.example.E_commerce.Enum.Role;
-import com.example.E_commerce.Models.Article;
-import com.example.E_commerce.Models.Personne;
-import com.example.E_commerce.Repository.PersonneRepository;
+import com.example.E_commerce.Dto.PersonneResponseDto;
 import com.example.E_commerce.Services.PersonneService;
-import com.example.E_commerce.Services.UserService;
-import lombok.AllArgsConstructor;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@AllArgsConstructor
+/** Catalogue public et inscription : aucune authentification requise. */
 @RestController
 @RequestMapping("/api/personne")
+@RequiredArgsConstructor
 public class PersonneController {
 
-    private  final PersonneService personneService;
-    private  final PersonneRepository personneRepository;
-    private  final UserService userService;
-    private  final PasswordEncoder passwordEncoder;
+    private final PersonneService personneService;
 
-    @GetMapping(value = "/Allarticle")
+    @GetMapping("/Allarticle")
     public ResponseEntity<List<ArticleDto>> voirAllArticle() {
+        return ResponseEntity.ok(personneService.voirAllArticle());
+    }
 
-        List <Article> article = personneService.voirAllArticle();
-
-        return ResponseEntity.ok(article.stream().map(ArticleDto::of).toList());
+    @GetMapping("/articleParCategorie/{idCategorie}")
+    public ResponseEntity<List<ArticleDto>> voirArticleParCategorie(@PathVariable Long idCategorie) {
+        return ResponseEntity.ok(personneService.voirArticleParCategorie(idCategorie));
     }
 
     @GetMapping("/avisArticle/{idArticle}")
@@ -39,27 +36,13 @@ public class PersonneController {
         return ResponseEntity.ok(personneService.voirAvisArticle(idArticle));
     }
 
-    @GetMapping(value = "/articleParCategorie/{idCategorie}")
-    public ResponseEntity<List<ArticleDto>> voirArticleParCategorie(@PathVariable Long idCategorie) {
-        List<Article> article = personneService.voirArticleParCategorie(idCategorie);
-        return ResponseEntity.ok(article.stream().map(ArticleDto::of).toList());
+    /**
+     * Inscription. Renvoie la ressource creee plutot qu'une phrase :
+     * le front peut ainsi enchainer sans refaire un appel.
+     */
+    @PostMapping("/register")
+    public ResponseEntity<PersonneResponseDto> register(@Valid @RequestBody PersonneDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(PersonneResponseDto.of(personneService.inscrire(dto)));
     }
-
-    @PostMapping(value = "/register")
-    public ResponseEntity<?> register(@RequestBody PersonneDto personneDto) {
-        if (personneRepository.findByEmail(personneDto.getEmail()).isPresent()){
-            return ResponseEntity.badRequest().body("Email déjà utilisé");
-        }
-        Personne personne = new Personne();
-        personne.setNom(personneDto.getNom());
-        personne.setMotDePasse(passwordEncoder.encode(personneDto.getMotDePasse()));
-        personne.setRole(Role.USER);
-        personne.setEmail(personneDto.getEmail());
-
-
-        personneService.registerUser(personne);
-        return ResponseEntity.created(null).body("Utilisateur enregistré avec succès");
-
-    }
-
 }

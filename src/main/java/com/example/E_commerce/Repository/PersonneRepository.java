@@ -8,4 +8,8 @@ import java.util.Optional;
 public interface PersonneRepository extends JpaRepository<Personne,Long> {
 
      Optional<Personne> findByEmail(String email);
+
+     java.util.List<Personne> findByRole(com.example.E_commerce.Enum.Role role);
+
+     long countByRole(com.example.E_commerce.Enum.Role role);
 }

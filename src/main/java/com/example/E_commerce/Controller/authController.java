@@ -3,6 +3,7 @@ package com.example.E_commerce.Controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,7 @@ public class authController {
 
     @Data
     @AllArgsConstructor
+    @NoArgsConstructor
     static class LoginRequest{
         private String email;
         private String password;

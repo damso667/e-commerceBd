@@ -1,6 +1,7 @@
 package com.example.E_commerce.Dto;
 
 import com.example.E_commerce.Models.Commande;
+import com.example.E_commerce.Models.Paiement;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,11 +16,17 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CommandeResponseDto {
+
     private Long idCommande;
     private String nomClient;
     private LocalDate dateCommande;
     private String statut;
+    /** Operateur de la derniere tentative de paiement, null si aucune. */
     private String modePaiement;
+    /** Statut de la derniere tentative de paiement, null si aucune. */
+    private String statutPaiement;
+    /** Reference a utiliser pour interroger GET /api/user/paiements/{reference}. */
+    private String referencePaiement;
     private BigDecimal montantTotal;
     private List<LigneCommandeResponseDto> lignes;
 
@@ -29,14 +36,25 @@ public class CommandeResponseDto {
         dto.setNomClient(commande.getClient().getNom());
         dto.setDateCommande(commande.getDateCommande());
         dto.setStatut(commande.getStatut().name());
-        dto.setModePaiement(commande.getPaiement() != null ?
-                commande.getPaiement().getModePaiement() : null);
+
+        Paiement paiement = commande.paiementCourant();
+        if (paiement != null) {
+            dto.setModePaiement(paiement.getFournisseur().name());
+            dto.setStatutPaiement(paiement.getStatutPaiement().name());
+            dto.setReferencePaiement(paiement.getReference());
+        }
+
         dto.setLignes(commande.getLignes().stream()
                 .map(LigneCommandeResponseDto::of)
                 .toList());
-        dto.setMontantTotal(dto.getLignes().stream()
-                .map(LigneCommandeResponseDto::getSousTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add));
+
+        // Le montant fige a la commande fait foi. On ne recalcule a partir
+        // des lignes que pour les anciennes commandes ou il est absent.
+        dto.setMontantTotal(commande.getMontantTotal() != null
+                ? commande.getMontantTotal()
+                : dto.getLignes().stream()
+                        .map(LigneCommandeResponseDto::getSousTotal)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add));
         return dto;
     }
 }
