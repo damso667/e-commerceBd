@@ -1,6 +1,7 @@
 package com.example.E_commerce.Services;
 
 import com.example.E_commerce.Dto.ArticleDto;
+import com.example.E_commerce.Dto.CategorieResponseDto;
 import com.example.E_commerce.Dto.AvisResponseDto;
 import com.example.E_commerce.Dto.PersonneDto;
 import com.example.E_commerce.Enum.Role;
@@ -9,6 +10,7 @@ import com.example.E_commerce.Exception.RessourceIntrouvableException;
 import com.example.E_commerce.Models.Article;
 import com.example.E_commerce.Models.Personne;
 import com.example.E_commerce.Repository.ArticleRepository;
+import com.example.E_commerce.Repository.CategorieRepository;
 import com.example.E_commerce.Repository.AvisRepository;
 import com.example.E_commerce.Repository.PersonneRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +26,27 @@ import java.util.List;
 public class PersonneService {
 
     private final ArticleRepository articleRepository;
+    private final CategorieRepository categorieRepository;
     private final PersonneRepository personneRepository;
     private final AvisRepository avisRepository;
     private final PasswordEncoder passwordEncoder;
+
+    /**
+     * Categories visibles par un visiteur non connecte.
+     *
+     * Sans cet endpoint, la boutique ne peut afficher qu'un identifiant
+     * numerique a la place du nom de la categorie : les categories
+     * n'etaient exposees que sous /api/admin, donc reservees aux
+     * administrateurs. Un « Categorie 3 » en tete de rayon est un defaut
+     * visible par tous les clients.
+     */
+    @Transactional(readOnly = true)
+    public List<CategorieResponseDto> voirCategories() {
+        return categorieRepository.findAll(org.springframework.data.domain.Sort.by("nomCategorie"))
+                .stream()
+                .map(CategorieResponseDto::of)
+                .toList();
+    }
 
     @Transactional(readOnly = true)
     public List<ArticleDto> voirAllArticle() {

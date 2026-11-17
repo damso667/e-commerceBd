@@ -2,6 +2,7 @@ package com.example.E_commerce.Controller;
 
 import com.example.E_commerce.Dto.ArticleDto;
 import com.example.E_commerce.Dto.AvisResponseDto;
+import com.example.E_commerce.Dto.CategorieResponseDto;
 import com.example.E_commerce.Dto.PersonneDto;
 import com.example.E_commerce.Dto.PersonneResponseDto;
 import com.example.E_commerce.Services.PersonneService;
@@ -24,6 +25,12 @@ public class PersonneController {
     @GetMapping("/Allarticle")
     public ResponseEntity<List<ArticleDto>> voirAllArticle() {
         return ResponseEntity.ok(personneService.voirAllArticle());
+    }
+
+    /** Rayons de la boutique, pour afficher un nom plutot qu'un numero. */
+    @GetMapping("/categories")
+    public ResponseEntity<List<CategorieResponseDto>> voirCategories() {
+        return ResponseEntity.ok(personneService.voirCategories());
     }
 
     @GetMapping("/articleParCategorie/{idCategorie}")
