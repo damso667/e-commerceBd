@@ -38,6 +38,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
+		<!-- Sonde /actuator/health utilisee par le health check de Render -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
 		<!-- Validation des DTO entrants (@Valid, @NotNull, @Pattern...) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

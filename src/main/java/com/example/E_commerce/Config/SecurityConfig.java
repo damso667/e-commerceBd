@@ -64,6 +64,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
+                        // Sonde interrogee par Render pour savoir si
+                        // l'instance est vivante. Ne divulgue aucun detail
+                        // (management.endpoint.health.show-details=never).
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+
                         .requestMatchers("/api/auth/**").permitAll()
 
                         // Webhooks operateurs : appeles par MTN / Orange, donc

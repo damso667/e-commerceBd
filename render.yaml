@@ -1,0 +1,94 @@
+# =============================================================
+#  Blueprint Render - API E-commerce
+#
+#  Pas de base de donnees declaree ici : la persistance est sur
+#  Supabase, atteinte via les variables DB_* (sync: false).
+#
+#  Les valeurs "sync: false" ne sont PAS stockees dans ce fichier
+#  et doivent etre renseignees dans le Dashboard Render ou via
+#  l'API. C'est volontaire : ce fichier est commite.
+# =============================================================
+services:
+  - type: web
+    name: ecommerce-api
+    runtime: docker
+    plan: free
+    region: frankfurt          # le pooler Supabase est en eu-central-1
+    branch: main
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+
+    envVars:
+      # ---- Profil ----------------------------------------------
+      # Indispensable : active SecurisationProduction, qui desactive
+      # les comptes de demonstration et cree l'administrateur.
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      - key: LOG_LEVEL
+        value: INFO
+
+      # ---- Base de donnees (Supabase, pooler transaction) ------
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 6543
+      - key: DB_NAME
+        value: postgres
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JPA_DDL_AUTO
+        value: update
+
+      # ---- Administrateur initial ------------------------------
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+
+      # ---- Front autorise -------------------------------------
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://mon-projet-frontend-9b5q.vercel.app,http://localhost:4200
+
+      # ---- Back-office ----------------------------------------
+      - key: ADMIN_SEUIL_STOCK_FAIBLE
+        value: 5
+
+      # ---- Paiement -------------------------------------------
+      - key: PAIEMENT_MODE
+        value: simulation
+      - key: PAIEMENT_SIMULATION_DELAI_MS
+        value: 4000
+      # Secret de signature des callbacks : genere par Render,
+      # jamais ecrit en clair dans le depot.
+      - key: PAIEMENT_WEBHOOK_SECRET
+        generateValue: true
+
+      # ---- Operateurs : a remplir le jour du passage en reel ---
+      - key: MTN_MOMO_BASE_URL
+        value: https://sandbox.momodeveloper.mtn.com
+      - key: MTN_MOMO_SUBSCRIPTION_KEY
+        sync: false
+      - key: MTN_MOMO_API_USER
+        sync: false
+      - key: MTN_MOMO_API_KEY
+        sync: false
+      - key: MTN_MOMO_TARGET_ENVIRONMENT
+        value: sandbox
+      - key: MTN_MOMO_CALLBACK_URL
+        value: https://ecommerce-api.onrender.com/api/paiements/webhook/MTN_MOMO
+
+      - key: ORANGE_MONEY_BASE_URL
+        value: https://api.orange.com
+      - key: ORANGE_MONEY_CLIENT_ID
+        sync: false
+      - key: ORANGE_MONEY_CLIENT_SECRET
+        sync: false
+      - key: ORANGE_MONEY_MERCHANT_KEY
+        sync: false
+      - key: ORANGE_MONEY_CALLBACK_URL
+        value: https://ecommerce-api.onrender.com/api/paiements/webhook/ORANGE_MONEY
