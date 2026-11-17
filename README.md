@@ -5,6 +5,11 @@ mobile money simulé (MTN MoMo et Orange Money).
 
 - Module de paiement : [docs/PAIEMENT.md](docs/PAIEMENT.md)
 - Back-office administrateur : [docs/BACKOFFICE.md](docs/BACKOFFICE.md)
+- Déploiement Render : [docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md)
+
+**En ligne :** https://ecommerce-api-60sl.onrender.com
+(plan gratuit : l'instance s'endort après 15 min d'inactivité et son réveil
+prend environ 150 s)
 
 ---
 
@@ -228,6 +233,8 @@ Les erreurs de validation ajoutent le détail par champ :
 ./mvnw test                          # 7 tests unitaires
 python scripts/test_paiement.py      # 31 contrôles, parcours client
 python scripts/test_admin.py         # 77 contrôles, back-office
+python scripts/verifier_deploiement.py   # API déployée, sans identifiants
 ```
 
-Les deux scripts Python exigent que le serveur tourne.
+Les deux premiers scripts exigent que le serveur tourne en local. Le
+troisième interroge l'instance Render et ne manipule aucun mot de passe.
