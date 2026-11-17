@@ -71,6 +71,12 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        // Identite de la boutique : lue par le front avant
+                        // tout affichage, y compris par un visiteur anonyme.
+                        // En ecriture elle reste sous /api/admin.
+                        .requestMatchers(HttpMethod.GET, "/api/parametres", "/api/parametres/**")
+                            .permitAll()
+
                         // Webhooks operateurs : appeles par MTN / Orange, donc
                         // sans session. Proteges par la signature HMAC, pas par
                         // l'authentification.
