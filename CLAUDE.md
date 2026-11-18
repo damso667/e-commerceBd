@@ -148,7 +148,14 @@ marchands**, qui doivent l'exploiter sous leur marque sans fork.
 python scripts/test_paiement.py        # 31 contrôles, parcours client
 python scripts/test_admin.py           # 77 contrôles, back-office
 python scripts/verifier_deploiement.py # instance Render, sans identifiants
+python scripts/test_production.py      # 24 controles, parcours client en ligne
 ```
+
+`test_production.py` vise la boutique deployee et passe par le relais du
+front, en posant l'en-tete `Origin` sur chaque appel : c'est le seul des
+quatre scripts qui reproduit les conditions exactes du navigateur, donc le
+seul capable de voir un refus CORS. Il cree un compte de test a chaque
+execution, a supprimer depuis le back-office.
 
 ```bash
 render logs -r srv-dbu5j1cipgvc73aplql0 --tail --confirm
