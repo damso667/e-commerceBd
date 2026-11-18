@@ -47,6 +47,15 @@ exists` apparaît dès la deuxième requête identique.
 `MaxRAMPercentage=70` est nécessaire : sinon la JVM dimensionne son tas sur
 la RAM de l'hôte et l'instance se fait tuer sur les 512 Mo du plan gratuit.
 
+**`CORS_ALLOWED_ORIGINS` doit contenir l'origine du front, même quand le
+front relaie `/api` depuis sa propre origine.** Le navigateur pose un
+en-tête `Origin` sur toute **écriture**, y compris same-origin ; le relais
+le transmet tel quel, et le filtre CORS répond `403 Invalid CORS request`
+avant tout contrôleur. Le symptôme trompe : le catalogue s'affiche (un
+`GET` same-origin n'envoie pas d'`Origin`) mais inscription, connexion,
+panier et paiement échouent tous. Un contrôle qui ne fait que des `GET` ne
+peut pas voir cette panne — il faut un `POST` portant l'en-tête `Origin`.
+
 **`SPRING_PROFILES_ACTIVE=prod` ne doit jamais être retiré.** Il déclenche
 `SecurisationProduction`, qui désactive les comptes de démonstration restés
 en base (`adrien@gmail.com`, `ralph@gmail.com`, mot de passe `password`) et

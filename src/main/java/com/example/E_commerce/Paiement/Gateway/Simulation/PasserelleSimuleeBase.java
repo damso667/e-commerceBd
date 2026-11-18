@@ -112,7 +112,7 @@ public abstract class PasserelleSimuleeBase implements PasserellePaiement {
 
         IssueSimulee transaction = new IssueSimulee(
                 demande.referenceInterne(), referenceOperateur, issue,
-                demande.montant(), Instant.now());
+                demande.montant(), demande.numeroPayeur(), Instant.now());
         transactions.put(referenceOperateur, transaction);
 
         log.info("[SIMULATION {}] demande {} acceptee (operateur {}), issue prevue {} dans {} ms",
@@ -222,13 +222,24 @@ public abstract class PasserelleSimuleeBase implements PasserellePaiement {
             return ResultatPasserelle.expire(t.referenceOperateur(),
                     "Le client n'a pas valide dans le delai imparti");
         }
-        String code = codeEchecPour(t.referenceInterne());
+        String code = codeEchecPour(t.numeroPayeur());
         return ResultatPasserelle.echec(t.referenceOperateur(), code, messagePour(code));
     }
 
-    private String codeEchecPour(String referenceInterne) {
-        return Math.abs(referenceInterne.hashCode()) % 2 == 0
-                ? "FONDS_INSUFFISANTS" : "REFUSE_PAR_UTILISATEUR";
+    /**
+     * Motif de l'echec, deduit du dernier chiffre du numero.
+     *
+     * Il etait tire d'un hachage de la reference interne, donc en pratique
+     * d'un tirage : le numero ...0 pouvait repondre REFUSE_PAR_UTILISATEUR
+     * et le ...1 FONDS_INSUFFISANTS. Deux numeros de test distincts ne
+     * servent a rien si le motif ne les suit pas, et la documentation de
+     * cette classe promettait deja la correspondance.
+     */
+    private String codeEchecPour(String numeroPayeur) {
+        String normalise = normaliser(numeroPayeur);
+        boolean fondsInsuffisants = !normalise.isEmpty()
+                && normalise.charAt(normalise.length() - 1) == '0';
+        return fondsInsuffisants ? "FONDS_INSUFFISANTS" : "REFUSE_PAR_UTILISATEUR";
     }
 
     private String messagePour(String code) {
@@ -260,6 +271,7 @@ public abstract class PasserelleSimuleeBase implements PasserellePaiement {
                                 String referenceOperateur,
                                 StatutPaiement issue,
                                 BigDecimal montant,
+                                String numeroPayeur,
                                 Instant initiee) {
     }
 }
