@@ -64,6 +64,20 @@ public class PersonneService {
                 .toList();
     }
 
+    /**
+     * Un article precis.
+     *
+     * <p>Sans cet endpoint, la fiche produit devait telecharger le catalogue
+     * entier pour en extraire une ligne : inutilement lourd sur une
+     * connexion mobile.</p>
+     */
+    @Transactional(readOnly = true)
+    public ArticleDto voirArticle(Long idArticle) {
+        Article article = articleRepository.findById(idArticle)
+                .orElseThrow(() -> RessourceIntrouvableException.de("Article", idArticle));
+        return ArticleDto.of(article);
+    }
+
     @Transactional(readOnly = true)
     public List<AvisResponseDto> voirAvisArticle(Long idArticle) {
         Article article = articleRepository.findById(idArticle)

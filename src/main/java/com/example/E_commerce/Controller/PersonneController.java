@@ -38,6 +38,11 @@ public class PersonneController {
         return ResponseEntity.ok(personneService.voirArticleParCategorie(idCategorie));
     }
 
+    @GetMapping("/article/{idArticle}")
+    public ResponseEntity<ArticleDto> voirArticle(@PathVariable Long idArticle) {
+        return ResponseEntity.ok(personneService.voirArticle(idArticle));
+    }
+
     @GetMapping("/avisArticle/{idArticle}")
     public ResponseEntity<List<AvisResponseDto>> voirAvisArticle(@PathVariable Long idArticle) {
         return ResponseEntity.ok(personneService.voirAvisArticle(idArticle));

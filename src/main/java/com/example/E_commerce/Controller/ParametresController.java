@@ -61,18 +61,30 @@ public class ParametresController {
     public ResponseEntity<Map<String, Object>> manifeste() {
         ParametresBoutique p = parametresService.charger();
 
-        Map<String, Object> icone = new LinkedHashMap<>();
+        List<Map<String, Object>> icones;
         if (p.aUneIcone()) {
-            icone.put("src", "/api/parametres/icone?v=" + p.getIconeVersion());
-            icone.put("type", p.getIconeType());
+            // Une seule entree : on ne connait ni la taille reelle du fichier
+            // depose ni sa marge de securite. "any maskable" laisse le
+            // systeme decider plutot que de mentir sur les dimensions.
+            Map<String, Object> deposee = new LinkedHashMap<>();
+            deposee.put("src", "/api/parametres/icone?v=" + p.getIconeVersion());
+            deposee.put("type", p.getIconeType());
+            deposee.put("sizes", "512x512");
+            deposee.put("purpose", "any maskable");
+            icones = List.of(deposee);
         } else {
-            // Icône de repli servie par le front : le manifeste reste valide
-            // même sans dépôt, l'application est installable dès le départ.
-            icone.put("src", "/icons/icone-512.png");
-            icone.put("type", "image/png");
+            // Icones livrees avec le front : l'application est installable
+            // des le premier demarrage, sans aucun depot.
+            icones = List.of(
+                    Map.of("src", "/icons/icone-192.png", "type", "image/png",
+                            "sizes", "192x192", "purpose", "any"),
+                    Map.of("src", "/icons/icone-512.png", "type", "image/png",
+                            "sizes", "512x512", "purpose", "any"),
+                    // La version maskable a une marge plus large : sans elle,
+                    // Android rogne le symbole en cercle et coupe la queue du Q.
+                    Map.of("src", "/icons/icone-maskable-512.png", "type", "image/png",
+                            "sizes", "512x512", "purpose", "maskable"));
         }
-        icone.put("sizes", "512x512");
-        icone.put("purpose", "any maskable");
 
         Map<String, Object> manifeste = new LinkedHashMap<>();
         manifeste.put("name", p.getNom());
@@ -85,7 +97,7 @@ public class ParametresController {
         manifeste.put("background_color", "#F4F2ED");
         manifeste.put("theme_color", p.getCouleurPrimaire());
         manifeste.put("lang", "fr");
-        manifeste.put("icons", List.of(icone));
+        manifeste.put("icons", icones);
 
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noCache())
