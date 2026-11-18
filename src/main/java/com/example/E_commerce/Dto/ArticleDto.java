@@ -35,10 +35,25 @@ public class ArticleDto {
                 .nom(a.getLibelle())
                 .description(a.getDescription())
                 .prix(a.getPrix())
-                .imageUrl(a.getImageUrl())
+                .imageUrl(adresseImage(a))
                 .categorieId(a.getCategorie().getIdCategorie())
                 .nomCategorie(a.getCategorie().getNomCategorie())
                 .stock(a.getStock())
                 .build();
+    }
+
+    /**
+     * Ou le front doit chercher l'image.
+     *
+     * <p>Une photo televersee l'emporte sur une URL externe : c'est la
+     * seule que l'administrateur controle depuis le back-office. La version
+     * en parametre change a chaque depot, ce qui suffit a casser le cache
+     * du navigateur sans toucher aux en-tetes.</p>
+     */
+    static String adresseImage(Article a) {
+        if (a.aUneImage()) {
+            return "/api/personne/articleImage/" + a.getId() + "?v=" + a.getImageVersion();
+        }
+        return a.getImageUrl();
     }
 }

@@ -136,7 +136,10 @@ marchands**, qui doivent l'exploiter sous leur marque sans fork.
 - Les binaires sont stockés **en base**, pas sur le disque : celui de
   Render est éphémère.
 - **SVG refusé à l'upload** : il peut contenir du script et serait servi
-  depuis l'origine de l'API. PNG, JPEG, WebP, 512 Ko maximum.
+  depuis l'origine de l'API. PNG, JPEG, WebP. La règle vit dans
+  `Services/ValidationImage.java`, partagée par le logo, l'icône et les
+  photos d'articles : l'oublier dans un seul des trois points d'entrée
+  suffirait à rouvrir le trou.
 
 ---
 

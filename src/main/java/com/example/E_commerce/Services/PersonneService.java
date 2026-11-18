@@ -111,4 +111,28 @@ public class PersonneService {
         personne.setActif(true);
         return personneRepository.save(personne);
     }
+
+    /**
+     * Photo d'un article, telle qu'elle a ete televersee.
+     *
+     * <p>La lecture est transactionnelle parce que le binaire est charge
+     * paresseusement : hors transaction, et avec {@code open-in-view=false},
+     * y acceder leverait une LazyInitializationException.</p>
+     *
+     * @return la photo, ou {@code null} si l'article n'en a pas
+     */
+    @Transactional(readOnly = true)
+    public ImageArticle lireImage(Long idArticle) {
+        Article article = articleRepository.findById(idArticle)
+                .orElseThrow(() -> RessourceIntrouvableException.de("Article", idArticle));
+        if (!article.aUneImage() || article.getImageDonnees() == null) {
+            return null;
+        }
+        return new ImageArticle(article.getImageDonnees(), article.getImageType(),
+                article.getImageVersion());
+    }
+
+    /** Photo prete a servir : octets, type MIME et version pour l'ETag. */
+    public record ImageArticle(byte[] donnees, String type, String version) {
+    }
 }

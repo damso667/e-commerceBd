@@ -21,6 +21,14 @@ public class ArticleResponseDto {
     private String imageUrl;
     private String nomCategorie;
 
+    /**
+     * Vrai quand la photo est televersee, faux quand elle vient d'une URL
+     * externe. Le back-office propose « Remplacer » dans un cas et
+     * « Televerser » dans l'autre, et ne propose « Retirer » que pour une
+     * photo qu'il sait effacer.
+     */
+    private boolean imageTeleversee;
+
     public static ArticleResponseDto of(Article article) {
         ArticleResponseDto dto = new ArticleResponseDto();
         dto.setIdArticle(article.getId());
@@ -28,7 +36,8 @@ public class ArticleResponseDto {
         dto.setDescription(article.getDescription());
         dto.setPrix(article.getPrix());
         dto.setStock(article.getStock());
-        dto.setImageUrl(article.getImageUrl());
+        dto.setImageUrl(ArticleDto.adresseImage(article));
+        dto.setImageTeleversee(article.aUneImage());
         dto.setNomCategorie(article.getCategorie().getNomCategorie());
         return dto;
     }

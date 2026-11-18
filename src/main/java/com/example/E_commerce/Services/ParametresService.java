@@ -13,8 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Lecture et modification de l'identité de la boutique.
@@ -29,16 +27,10 @@ public class ParametresService {
     private static final Logger log = LoggerFactory.getLogger(ParametresService.class);
 
     /**
-     * Types acceptés. <b>SVG volontairement exclu</b> : un SVG peut contenir
-     * du script, et il serait servi depuis l'origine de l'API. Dans une
-     * balise {@code <img>} le script ne s'exécute pas, mais une navigation
-     * directe vers l'URL, elle, l'exécuterait. Le gain esthétique ne vaut
-     * pas ce trou.
+     * 512 Ko : largement assez pour un logo, et la ligne reste légère. Les
+     * contrôles de format sont dans {@link ValidationImage}, partagés avec
+     * les photos d'articles.
      */
-    private static final List<String> TYPES_ACCEPTES =
-            List.of("image/png", "image/jpeg", "image/webp");
-
-    /** 512 Ko : largement assez pour un logo, et la ligne reste légère. */
     private static final long TAILLE_MAX = 512L * 1024L;
 
     private final ParametresBoutiqueRepository repository;
@@ -125,31 +117,15 @@ public class ParametresService {
     // ==================================================================
 
     private void valider(MultipartFile fichier) {
-        if (fichier == null || fichier.isEmpty()) {
-            throw new RequeteInvalideException("Aucun fichier recu");
-        }
-        if (fichier.getSize() > TAILLE_MAX) {
-            throw new RequeteInvalideException(
-                    "Fichier trop lourd : " + (fichier.getSize() / 1024) + " Ko, maximum 512 Ko");
-        }
-        String type = fichier.getContentType();
-        if (type == null || !TYPES_ACCEPTES.contains(type.toLowerCase())) {
-            throw new RequeteInvalideException(
-                    "Format non accepte : " + type + ". Formats acceptes : PNG, JPEG, WebP. "
-                    + "Le SVG est refuse pour des raisons de securite.");
-        }
+        ValidationImage.valider(fichier, TAILLE_MAX);
     }
 
     private byte[] lire(MultipartFile fichier) {
-        try {
-            return fichier.getBytes();
-        } catch (Exception e) {
-            throw new RequeteInvalideException("Fichier illisible");
-        }
+        return ValidationImage.lire(fichier);
     }
 
     private static String nouvelleVersion() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        return ValidationImage.nouvelleVersion();
     }
 
     private static String vide(String valeur) {

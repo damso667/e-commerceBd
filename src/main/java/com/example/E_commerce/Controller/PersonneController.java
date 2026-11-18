@@ -8,10 +8,13 @@ import com.example.E_commerce.Dto.PersonneResponseDto;
 import com.example.E_commerce.Services.PersonneService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.util.List;
 
 /** Catalogue public et inscription : aucune authentification requise. */
@@ -52,6 +55,28 @@ public class PersonneController {
      * Inscription. Renvoie la ressource creee plutot qu'une phrase :
      * le front peut ainsi enchainer sans refaire un appel.
      */
+    /**
+     * Photo d'un article, servie depuis la base.
+     *
+     * <p>Mise en cache un an avec un ETag tire de la version : le
+     * navigateur ne la redemande que lorsque l'administrateur l'a
+     * remplacee, et le parametre {@code ?v=} present dans l'URL rendue par
+     * l'API change alors de lui-meme.</p>
+     */
+    @GetMapping("/articleImage/{idArticle}")
+    public ResponseEntity<byte[]> imageArticle(@PathVariable Long idArticle) {
+        PersonneService.ImageArticle image = personneService.lireImage(idArticle);
+        if (image == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(
+                        image.type() == null ? MediaType.IMAGE_JPEG_VALUE : image.type()))
+                .eTag("\"" + image.version() + "\"")
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic())
+                .body(image.donnees());
+    }
+
     @PostMapping("/register")
     public ResponseEntity<PersonneResponseDto> register(@Valid @RequestBody PersonneDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED)

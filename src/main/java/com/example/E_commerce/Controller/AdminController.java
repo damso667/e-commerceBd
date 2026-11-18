@@ -14,6 +14,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -104,6 +106,24 @@ public class AdminController {
     public ResponseEntity<ArticleResponseDto> ajusterStock(
             @PathVariable Long idArticle, @Valid @RequestBody AjustementStockDto dto) {
         return ResponseEntity.ok(adminService.ajusterStock(idArticle, dto));
+    }
+
+    /**
+     * Photo du produit, televersee et non pointee par une URL : les
+     * fichiers vivent en base, comme le logo, parce que le disque de
+     * l'hebergeur est ephemere.
+     */
+    @PostMapping(value = "/articles/{idArticle}/image",
+                 consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ArticleResponseDto> deposerImage(
+            @PathVariable Long idArticle,
+            @RequestParam("fichier") MultipartFile fichier) {
+        return ResponseEntity.ok(adminService.deposerImage(idArticle, fichier));
+    }
+
+    @DeleteMapping("/articles/{idArticle}/image")
+    public ResponseEntity<ArticleResponseDto> retirerImage(@PathVariable Long idArticle) {
+        return ResponseEntity.ok(adminService.retirerImage(idArticle));
     }
 
     @DeleteMapping("/articles/{idArticle}")

@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -140,6 +141,63 @@ public class AdminService {
                 avant + " -> " + apres + " (" + (dto.getVariation() >= 0 ? "+" : "")
                 + dto.getVariation() + ")"
                 + (dto.getMotif() == null ? "" : " | motif : " + dto.getMotif()));
+        return ArticleResponseDto.of(enregistre);
+    }
+
+    // ------------------------------------------------------------------
+    //  Photo de l'article
+    // ------------------------------------------------------------------
+
+    /**
+     * 1 Mo. Une photo de produit correctement compressee pour le web pese
+     * 150 a 250 Ko ; 1 Mo laisse de la marge sans qu'un catalogue de
+     * plusieurs centaines d'articles ne fasse enfler la base.
+     */
+    private static final long TAILLE_MAX_PHOTO = 1024L * 1024L;
+
+    /**
+     * Depot d'une photo. Elle remplace l'eventuelle URL externe dans ce que
+     * voit le front : c'est la seule image que l'administrateur controle
+     * depuis le back-office, et laisser les deux coexister en affichage
+     * obligerait a expliquer laquelle gagne.
+     */
+    @Transactional
+    public ArticleResponseDto deposerImage(Long idArticle, MultipartFile fichier) {
+        ValidationImage.valider(fichier, TAILLE_MAX_PHOTO);
+        Article article = articleRepository.findById(idArticle)
+                .orElseThrow(() -> RessourceIntrouvableException.de("Article", idArticle));
+
+        boolean remplacement = article.aUneImage();
+        article.setImageDonnees(ValidationImage.lire(fichier));
+        article.setImageType(fichier.getContentType());
+        article.setImageVersion(ValidationImage.nouvelleVersion());
+
+        Article enregistre = articleRepository.save(article);
+        journal.tracer("ARTICLE_IMAGE_DEPOSEE", JournalAdminService.ARTICLE, idArticle,
+                (remplacement ? "photo remplacee" : "photo ajoutee")
+                + " (" + (fichier.getSize() / 1024) + " Ko, " + fichier.getContentType() + ")");
+        return ArticleResponseDto.of(enregistre);
+    }
+
+    /**
+     * Retrait de la photo. L'URL externe eventuelle reprend alors la main ;
+     * sans elle, la boutique affiche le visuel de remplacement portant le
+     * nom de l'article.
+     */
+    @Transactional
+    public ArticleResponseDto retirerImage(Long idArticle) {
+        Article article = articleRepository.findById(idArticle)
+                .orElseThrow(() -> RessourceIntrouvableException.de("Article", idArticle));
+        if (!article.aUneImage()) {
+            throw new RegleMetierException("Cet article n'a pas de photo televersee");
+        }
+        article.setImageDonnees(null);
+        article.setImageType(null);
+        article.setImageVersion(null);
+
+        Article enregistre = articleRepository.save(article);
+        journal.tracer("ARTICLE_IMAGE_RETIREE", JournalAdminService.ARTICLE, idArticle,
+                "photo retiree");
         return ArticleResponseDto.of(enregistre);
     }
 

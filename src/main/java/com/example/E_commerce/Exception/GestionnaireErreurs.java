@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -47,6 +48,19 @@ public class GestionnaireErreurs {
     public ResponseEntity<Map<String, Object>> requeteInvalide(
             RuntimeException e, HttpServletRequest requete) {
         return reponse(HttpStatus.BAD_REQUEST, e.getMessage(), requete);
+    }
+
+    /**
+     * Fichier au-dela de la limite du conteneur. Sans ce traitement, Spring
+     * laisse remonter une erreur serveur : l'administrateur verrait un 500
+     * la ou il a simplement choisi une photo trop lourde.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> fichierTropLourd(
+            MaxUploadSizeExceededException e, HttpServletRequest requete) {
+        return reponse(HttpStatus.PAYLOAD_TOO_LARGE,
+                "Fichier trop lourd. Maximum 1 Mo pour une photo d'article, "
+                + "512 Ko pour le logo ou l'icone.", requete);
     }
 
     @ExceptionHandler(RegleMetierException.class)
