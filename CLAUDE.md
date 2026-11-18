@@ -152,6 +152,7 @@ python scripts/test_paiement.py        # 31 contrôles, parcours client
 python scripts/test_admin.py           # 77 contrôles, back-office
 python scripts/verifier_deploiement.py # instance Render, sans identifiants
 python scripts/test_production.py      # 24 controles, parcours client en ligne
+ADMIN_EMAIL=... ADMIN_PASSWORD=... python scripts/test_images.py
 ```
 
 `test_production.py` vise la boutique deployee et passe par le relais du
@@ -159,6 +160,13 @@ front, en posant l'en-tete `Origin` sur chaque appel : c'est le seul des
 quatre scripts qui reproduit les conditions exactes du navigateur, donc le
 seul capable de voir un refus CORS. Il cree un compte de test a chaque
 execution, a supprimer depuis le back-office.
+
+`test_images.py` couvre les photos d'articles de bout en bout : depot,
+lecture publique, refus du SVG, refus d'un fichier trop lourd, survie a une
+modification de l'article, trace au journal, retrait. Il lui faut une
+session administrateur, prise dans `ADMIN_EMAIL` et `ADMIN_PASSWORD` —
+les memes valeurs que les variables du meme nom sur Render — et il ne les
+ecrit ni ne les affiche nulle part.
 
 ```bash
 render logs -r srv-dbu5j1cipgvc73aplql0 --tail --confirm

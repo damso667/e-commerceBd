@@ -231,7 +231,14 @@ public class AdminService {
         article.setDescription(dto.getDescription());
         article.setPrix(dto.getPrix());
         article.setStock(dto.getStock());
-        article.setImageUrl(vide(dto.getImageUrl()));
+        // L'URL externe n'est ecrasee que si la requete en porte une. Le
+        // back-office ne l'envoie plus depuis que les photos se televersent ;
+        // l'ecraser avec null a chaque modification effacerait l'image des
+        // articles amorces avec une adresse, sans que personne l'ait demande.
+        String urlDemandee = vide(dto.getImageUrl());
+        if (urlDemandee != null) {
+            article.setImageUrl(urlDemandee);
+        }
         article.setCategorie(categorie);
     }
 
