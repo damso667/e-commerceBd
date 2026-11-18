@@ -1,6 +1,13 @@
 package com.example.E_commerce.Config;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
+
+import java.io.IOException;
+import java.time.Instant;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -87,10 +94,56 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/personne/register").permitAll()
 
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/user/**").hasRole("USER")
+                        // Un administrateur doit pouvoir acheter comme un
+                        // client : sans ROLE_ADMIN dans cette liste, son
+                        // propre panier lui serait refuse.
+                        .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
                 )
+                /*
+                 * Sans ces deux gestionnaires, Spring Security repond 403 a
+                 * TOUT refus, y compris a un visiteur simplement non
+                 * authentifie. Le front ne peut alors pas distinguer « votre
+                 * session a expire, reconnectez-vous » de « votre compte n'a
+                 * pas les droits », et affiche un refus incomprehensible la
+                 * ou il suffisait de proposer la connexion.
+                 */
+                .exceptionHandling(gestion -> gestion
+                        .authenticationEntryPoint(SecurityConfig::nonAuthentifie)
+                        .accessDeniedHandler(SecurityConfig::droitsInsuffisants))
                 .build();
+    }
+
+    /** 401 : aucune session valide. Le front propose la connexion. */
+    private static void nonAuthentifie(HttpServletRequest requete,
+                                       HttpServletResponse reponse,
+                                       AuthenticationException exception) throws IOException {
+        ecrire(requete, reponse, HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized",
+                "Vous devez vous connecter pour continuer.");
+    }
+
+    /** 403 : session valide, mais le role ne suffit pas. */
+    private static void droitsInsuffisants(HttpServletRequest requete,
+                                           HttpServletResponse reponse,
+                                           AccessDeniedException exception) throws IOException {
+        ecrire(requete, reponse, HttpServletResponse.SC_FORBIDDEN, "Forbidden",
+                "Votre compte n'a pas acces a cette ressource.");
+    }
+
+    /**
+     * Meme format d'erreur que {@code GestionnaireErreurs} : le front n'a
+     * qu'un seul cas a traiter, quelle que soit la couche qui refuse.
+     */
+    private static void ecrire(HttpServletRequest requete, HttpServletResponse reponse,
+                               int statut, String libelle, String message) throws IOException {
+        reponse.setStatus(statut);
+        reponse.setContentType("application/json;charset=UTF-8");
+        reponse.getWriter().write(
+                "{\"horodatage\":\"" + Instant.now() + "\","
+                        + "\"statut\":" + statut + ","
+                        + "\"erreur\":\"" + libelle + "\","
+                        + "\"message\":\"" + message + "\","
+                        + "\"chemin\":\"" + requete.getRequestURI() + "\"}");
     }
 
     @Bean
